@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aiupscale"
+version = "0.2.0"
+description = "Upscale AI-generated 480p video to 4K/8K with Real-ESRGAN models, temporal anti-flicker and 10-bit HEVC/AV1 output"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "BSD-3-Clause" }
+dependencies = [
+  "torch>=2.1",
+  "spandrel>=0.4",
+  "opencv-python-headless>=4.8",
+  "numpy>=1.24",
+  "tqdm>=4.65",
+  "tkinterdnd2>=0.4",  # drag & drop for the GUI (optional at runtime)
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+aiupscale = "aiupscale.cli:main"
+
+[project.gui-scripts]
+aiupscale-gui = "aiupscale.gui:main"
+
+[tool.setuptools]
+packages = ["aiupscale"]
