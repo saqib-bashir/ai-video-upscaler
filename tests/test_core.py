@@ -157,3 +157,30 @@ def test_compare_on_clip_shorter_than_timestamp(clip, tmp_path):
     opt = Options(target="192x108", deflicker=0.7)
     out = compare(clip, tmp_path / "c.png", opt, at=5.0)  # clip is only 1 s long
     assert out.exists() and opt.deflicker == 0.7  # caller's options untouched
+
+
+# ----------------------------------------------------------------- doctor
+def _fake_env(monkeypatch, cuda_build, smi_ok, platform="win32"):
+    from aiupscale import doctor
+
+    monkeypatch.setattr(torch.version, "cuda", cuda_build)
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+    monkeypatch.setattr(doctor.sys, "platform", platform)
+    monkeypatch.setattr(doctor, "_nvidia_smi", lambda: (
+        smi_ok, "NVIDIA GeForce RTX 4070 Laptop GPU, 566.36, 8188 MiB" if smi_ok else "not found"))
+    return doctor.diagnose()
+
+
+def test_doctor_detects_cpu_only_pytorch_on_windows(monkeypatch):
+    dg = _fake_env(monkeypatch, None, True)
+    assert not dg.ok and "CPU-only" in dg.summary and "fix_gpu.bat" in dg.summary
+
+
+def test_doctor_detects_gpu_switched_off(monkeypatch):
+    dg = _fake_env(monkeypatch, "12.8", False)
+    assert not dg.ok and "Eco" in dg.summary
+
+
+def test_doctor_detects_old_driver(monkeypatch):
+    dg = _fake_env(monkeypatch, "12.8", True)
+    assert not dg.ok and "driver too old" in dg.summary

@@ -21,11 +21,20 @@ if errorlevel 1 (
 if not exist .venv python -m venv .venv
 call .venv\Scripts\activate.bat
 python -m pip install --upgrade pip
-REM CUDA 12.8 build of PyTorch (supports RTX 20/30/40/50 series)
-pip install torch --index-url https://download.pytorch.org/whl/cu128 || goto :fail
+REM CUDA 12.8 build of PyTorch (RTX 20/30/40/50 series). torch AND torchvision must come
+REM from this index together: a torchvision from PyPI would pull in PyPI's torch, which
+REM is CPU-only on Windows.
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128 || goto :fail
 pip install -e . || goto :fail
+python -c "import torch,sys; sys.exit(0 if torch.version.cuda else 1)"
+if errorlevel 1 (
+  echo [!] PyTorch was replaced by the CPU-only build - reinstalling the CUDA build ...
+  pip uninstall -y torch torchvision
+  pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128 || goto :fail
+)
 aiupscale models --download general general-wdn x2plus || goto :fail
-python -c "import torch; ok=torch.cuda.is_available(); print('CUDA OK:', ok, torch.cuda.get_device_name(0) if ok else '- running on CPU will be VERY slow')"
+echo.
+aiupscale doctor
 echo.
 echo Done. Double-click "AI Upscaler.bat" to open the window,
 echo or drag a video onto upscale_4k.bat / upscale_8k.bat

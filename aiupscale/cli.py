@@ -92,6 +92,8 @@ def build_parser() -> argparse.ArgumentParser:
     cp.add_argument("--crop", type=int, default=768, help="crop size in output pixels")
     _add_common(cp)
 
+    sub.add_parser("doctor", help="check GPU / PyTorch / NVENC setup and explain problems")
+
     gp = sub.add_parser("gui", help="open the drag-and-drop window")
     gp.add_argument("inputs", nargs="*", help="videos to pre-load")
 
@@ -129,6 +131,11 @@ def main(argv: list[str] | None = None) -> int:
     a = build_parser().parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if a.verbose else logging.INFO,
                         format="%(message)s", stream=sys.stderr)
+
+    if a.cmd == "doctor":
+        from .doctor import main as doctor_main
+
+        return doctor_main()
 
     if a.cmd == "gui":
         from .gui import main as gui_main

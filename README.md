@@ -132,6 +132,15 @@ Interrupted? Run **the same command again** and it resumes from the last finishe
 the x2plus pass at roughly 0.3–1 fps, so the same 5 s clip takes about 2–6 minutes. `-q max` is several times slower than
 `balanced` at 4K. Run `--duration 2` first to measure your real speed.
 
+## "No GPU found"?
+
+Run **`fix_gpu.bat`** (or `aiupscale doctor` to see the reason). Typical causes:
+
+* **CPU-only PyTorch.** PyTorch from PyPI is CPU-only on Windows. `fix_gpu.bat` reinstalls the CUDA build.
+* **GPU switched off.** Gaming laptops have an Eco / iGPU-only / "Integrated" mode (Armoury Crate, Lenovo Vantage,
+  MSI Center, ...) that disables the RTX GPU. Switch to Standard/Hybrid or dGPU mode and reboot.
+* **Old NVIDIA driver.** Install the latest Game Ready or Studio driver from nvidia.com.
+
 ## How it works
 
 ```text

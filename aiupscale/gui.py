@@ -300,20 +300,15 @@ class App:
     # ------------------------------------------------------------------ backend
     def _init_backend(self):
         try:
-            import torch
-
             from . import pipeline
-            from .engine import pick_device
+            from .doctor import diagnose
 
-            dev = pick_device("auto")
-            if dev.type == "cuda":
-                props = torch.cuda.get_device_properties(dev)
-                text = f"GPU: {props.name} ({props.total_memory / 2**30:.0f} GB) - ready"
-            elif dev.type == "mps":
-                text = "GPU: Apple Silicon (MPS) - ready"
-            else:
-                text = "No GPU found - running on CPU will be VERY slow"
-            self.q.put(("ready", pipeline, text, dev.type))
+            dg = diagnose()
+            if not dg.ok:
+                self.q.put(("log", "GPU check (also available as: aiupscale doctor)"))
+                for line in dg.details:
+                    self.q.put(("log", "  " + line))
+            self.q.put(("ready", pipeline, dg.summary, dg.device))
         except Exception as e:  # noqa: BLE001
             self.q.put(("fatal", f"Could not load the AI engine: {e}"))
 
